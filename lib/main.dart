@@ -1,6 +1,7 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(MyApp());
@@ -16,7 +17,9 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'GitHub Repo Viewer',
         theme: ThemeData(
+          useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Color.fromRGBO(203, 166, 247, 1.0)),
+          textTheme: GoogleFonts.interTextTheme(),
         ),
         home: MyHomePage(),
       ),
@@ -26,26 +29,67 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
+
+  void getNext() {
+    current = WordPair.random();
+    notifyListeners();
+  }
+
+  var favorites = <WordPair>{};
+
+  void toggleFavorite() {
+    if (favorites.contains(current)) {
+      favorites.remove(current);
+    } else {
+      favorites.add(current);
+    }
+    notifyListeners();
+  }
+
+  bool isFavorite() {
+    return favorites.contains(current);
+  }
 }
 
 class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
 
     return Scaffold(
-      body: Column(
-        children: [
-          Text('Why hot reload is TERRIBLE: (below is encrypted code trust)'),
-          BigCard(pair: pair),
-          ElevatedButton(
-            onPressed: () {
-              print("Hey! Why are you pressing me? It's not like I don't like it or anything... but");
-            },
-            child: Text('Harass'),
-          ),
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            BigCard(pair: pair),
+            SizedBox(height: 10),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton.icon(
+                    onPressed: () {
+                      appState.toggleFavorite();
+                    },
+                    icon: switch (appState.isFavorite()) {
+                      true => Icon(Icons.favorite, color: Colors.red),
+                      false => Icon(Icons.favorite_border, color: Colors.grey),
+                    },
+                    label: Text('Like'),
+                ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    appState.getNext();
+                  },
+                  child: Text('Harass Cashier Lady'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
