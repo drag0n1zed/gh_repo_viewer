@@ -67,9 +67,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Widget page = switch (selectedIndex) {
+    Widget mobilePage = switch (selectedIndex) {
       0 => GeneratorPage(),
-      1 => FavoritesPage(),
+      1 => FavoritesMobilePage(),
+      _ => throw UnimplementedError('no widget for $selectedIndex'),
+    };
+
+    Widget desktopPage = switch (selectedIndex) {
+      0 => GeneratorPage(),
+      1 => FavoritesDesktopPage(),
       _ => throw UnimplementedError('no widget for $selectedIndex'),
     };
 
@@ -77,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
       smallLayout: Scaffold(
         body: Container(
           color: Theme.of(context).colorScheme.primaryContainer,
-          child: page,
+          child: mobilePage,
         ),
         bottomNavigationBar: NavigationBar(
           labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
@@ -133,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Expanded(
                   child: Container(
                     color: Theme.of(context).colorScheme.primaryContainer,
-                    child: page,
+                    child: desktopPage,
                   ),
                 ),
               ],
@@ -145,20 +151,96 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class FavoritesPage extends StatefulWidget {
-  const FavoritesPage({super.key});
+class FavoritesMobilePage extends StatefulWidget {
+  const FavoritesMobilePage({super.key});
 
   @override
-  State<FavoritesPage> createState() => _FavoritesPageState();
+  State<FavoritesMobilePage> createState() => _FavoritesMobilePageState();
 }
 
-class _FavoritesPageState extends State<FavoritesPage> {
+class _FavoritesMobilePageState extends State<FavoritesMobilePage> {
   WordPair? selectedItem;
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    final theme = Theme.of(context);
+
+    return Column(
+      children: [
+        Expanded(
+          flex: 7,
+          child: Container(
+            width: 200,
+            height: 400,
+            margin: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).colorScheme.primaryContainer,
+            ),
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: ListView(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  for (var m in appState.favorites)
+                    ListTile(
+                      selected: selectedItem == m,
+                      title: Center(child: Text(m.asLowerCase)),
+                      onTap: () {
+                        setState(() {
+                          selectedItem = m;
+                        });
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: switch (selectedItem) {
+                null => [Text('Select a favorite to view details')],
+                WordPair pair => [
+                  BigCard(pair: pair),
+                  SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: () => appState.toggleFavorite(selectedItem),
+                    icon: appState.isFavorite(selectedItem)
+                        ? Icon(Icons.favorite)
+                        : Icon(Icons.favorite_border),
+                    label: Text('Like'),
+                  ),
+                ],
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class FavoritesDesktopPage extends StatefulWidget {
+  const FavoritesDesktopPage({super.key});
+
+  @override
+  State<FavoritesDesktopPage> createState() => _FavoritesDesktopPageState();
+}
+
+class _FavoritesDesktopPageState extends State<FavoritesDesktopPage> {
+  WordPair? selectedItem;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
 
     return Center(
       child: Row(
